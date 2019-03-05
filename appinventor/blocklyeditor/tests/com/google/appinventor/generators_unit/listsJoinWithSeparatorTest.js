@@ -58,7 +58,8 @@
 ////////////////////////////////////////
 
 var expected =
-  "(call-yail-primitive string-append (*list-for-runtime* ) '() \"join with separator\")";
+  "(call-yail-primitive join-strings (*list-for-runtime* (call-yail-primitive make-yail-list (*list-for-runtime* ) '() \"make a list\") \"\") '(list text) \"join with separator";
+
 
 var delayedGenerator = function () { return Blockly.Yail.lists_join_with_separator; } ;
 
