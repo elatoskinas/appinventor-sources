@@ -300,3 +300,41 @@ Blockly.Yail['lists_from_csv_table'] = function() {
    code = code + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_DOUBLE_QUOTE + "lookup in pairs" + Blockly.Yail.YAIL_DOUBLE_QUOTE + Blockly.Yail.YAIL_CLOSE_COMBINATION;
    return [ code, Blockly.Yail.ORDER_ATOMIC ];
  };
+
+ Blockly.Yail['lists_join_with_separator'] = function() {
+   // Joins list items into a string separated by specified separator
+   var argument0 = Blockly.Yail.valueToCode(this, 'SEPARATOR', Blockly.Yail.ORDER_NONE) || "\"\"";
+   var argument1 = Blockly.Yail.valueToCode(this, 'LIST', Blockly.Yail.ORDER_NONE) || Blockly.Yail.emptyListCode;
+   var code = Blockly.Yail.YAIL_CALL_YAIL_PRIMITIVE + 'string-append' + Blockly.Yail.YAIL_SPACER;
+   code = code + Blockly.Yail.YAIL_OPEN_COMBINATION + Blockly.Yail.YAIL_LIST_CONSTRUCTOR + Blockly.Yail.YAIL_SPACER;
+
+   // Extact argument1 list elements (slice the argument string, split it, remove first occurence [which is Blockly.Yail.YAIL_LIST_CONSTRUCTOR])
+   var listElements = argument1.slice(argument1.indexOf('(*'), argument1.indexOf(')')-1);
+   listElements = listElements.split(" ");
+   listElements.shift();
+   var variableCount = listElements.length;
+
+   for (var i = 0; i < listElements.length; ++i) {
+     code += listElements[i] + " ";
+
+     // Last element does not need a separator
+     if ((i+1) != listElements.length) {
+       code += argument0 + " ";
+       variableCount++;
+     }
+   }
+
+   code += Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_SPACER  + Blockly.Yail.YAIL_QUOTE + Blockly.Yail.YAIL_OPEN_COMBINATION;
+
+   // Argument types all equal to text
+   for (var i = 0; i < variableCount; ++i) {
+     code += "text ";
+   }
+
+   code += Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_DOUBLE_QUOTE + "join with separator" + Blockly.Yail.YAIL_DOUBLE_QUOTE + Blockly.Yail.YAIL_CLOSE_COMBINATION;
+
+//    var code = '(call-yail-primitive string-append (*list-for-runtime* ' + argsList + ") '(" + typeList + ') "join with separator")';
+//    console.log(code);
+
+    return [ code, Blockly.Yail.ORDER_ATOMIC ];
+ };
