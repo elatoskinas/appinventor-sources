@@ -1785,6 +1785,9 @@ Blockly.Versioning.AllUpgradeMaps =
 
   }, // End Language upgraders
 
+  "LineChart": {
+    1: "noUpgrade"
+  },
 
   "ListPicker": {
 

@@ -849,6 +849,9 @@ public class YaVersion {
 
   public static final int LABEL_COMPONENT_VERSION = 4;
 
+  // For LINECHART_COMPONENT_VERSION 1:
+  public static final int LINECHART_COMPONENT_VERSION = 1;
+
   // For LINESTRING_COMPONENT_VERSION 1:
   // - Initial LineString implementation for Maps
   public static final int LINESTRING_COMPONENT_VERSION = 1;
