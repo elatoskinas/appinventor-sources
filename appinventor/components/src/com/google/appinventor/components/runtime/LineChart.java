@@ -20,3 +20,5 @@ public class LineChart extends ChartComponent {
         super(container);
     }
 }
+
+

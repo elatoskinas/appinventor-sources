@@ -28,3 +28,5 @@ public class ChartComponent extends AndroidViewComponent {
         return view;
     }
 }
+
+
