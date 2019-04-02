@@ -4,11 +4,10 @@ import android.view.View;
 import android.widget.TextView;
 import com.google.appinventor.components.annotations.*;
 import com.google.appinventor.components.common.PropertyTypeConstants;
-import com.google.appinventor.components.runtime.util.TextViewUtil;
 
 @SimpleObject
 public class ChartComponent extends AndroidViewComponent {
-    private final android.widget.TextView view;
+    private final TextView view;
 
     private boolean scaleXEnabled;
 
