@@ -1,13 +1,14 @@
 package com.google.appinventor.components.runtime;
 
 import android.view.View;
-import android.widget.TextView;
+import com.github.mikephil.charting.charts.Chart;
 import com.google.appinventor.components.annotations.*;
 import com.google.appinventor.components.common.PropertyTypeConstants;
 
 @SimpleObject
-public class ChartComponent extends AndroidViewComponent {
-    private final TextView view;
+@UsesLibraries(libraries = "mpandroidchart.jar")
+public abstract class ChartComponent<T extends Chart> extends AndroidViewComponent {
+    protected T view;
 
     private boolean scaleXEnabled;
 
@@ -18,13 +19,12 @@ public class ChartComponent extends AndroidViewComponent {
      */
     protected ChartComponent(ComponentContainer container) {
         super(container);
+    }
 
-        view = new TextView(container.$context());
-
+    protected void initChart() {
         // Adds the component to its designated container
         container.$add(this);
-
-        ScaleXEnabled(true);
+        view.setEnabled(true);
     }
 
 
