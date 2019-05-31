@@ -1,12 +1,13 @@
 package com.google.appinventor.components.runtime;
 
+import com.github.mikephil.charting.data.ChartData;
 import com.google.appinventor.components.annotations.*;
 import com.github.mikephil.charting.charts.Chart;
 import com.google.appinventor.components.common.PropertyTypeConstants;
 
 @SimpleObject
 @UsesLibraries(libraries = "mpandroidchart.jar")
-public abstract class ChartBase<T extends Chart, D extends ChartDataBase> extends AndroidViewComponent {
+public abstract class ChartBase<T extends Chart, D extends ChartData> extends AndroidViewComponent {
 
     protected T view;
     protected D data;
