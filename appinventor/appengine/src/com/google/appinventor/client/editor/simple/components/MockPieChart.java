@@ -19,6 +19,8 @@ public final class MockPieChart extends MockChart<PieChart> {
         // Initialize Line Chart mock Widget
         chartWidget = new PieChart();
 
+        chartWidget.getOptions().getLegend().getLabels().setBoxWidth(20);
+
         // Load test data set
         loadTestData();
 
