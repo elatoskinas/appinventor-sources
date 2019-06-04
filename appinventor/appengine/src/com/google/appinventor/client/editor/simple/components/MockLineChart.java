@@ -13,14 +13,8 @@ import org.pepstock.charba.client.resources.ResourcesType;
 
 import java.util.ArrayList;
 
-public final class MockLineChart extends MockVisibleComponent {
+public final class MockLineChart extends MockChart<LineChart> {
     public static final String TYPE = "LineChart";
-
-    private LineChart lineChartWidget;
-
-    static {
-        ResourcesType.setClientBundle(EmbeddedResources.INSTANCE);
-    }
 
     /**
      * Creates a new instance of a Mock Line Chart component.
@@ -31,10 +25,21 @@ public final class MockLineChart extends MockVisibleComponent {
         super(editor, TYPE, images.image());
 
         // Initialize Line Chart mock Widget
-        lineChartWidget = new LineChart();
+        chartWidget = new LineChart();
 
+        // Load test data set
+        loadTestData();
+
+        // Initialize the Chart
+        initChart();
+    }
+
+    /**
+     * Loads a test data set for the Line Chart widget.
+     */
+    private void loadTestData() {
         // Initialize data set
-        LineDataset dataset = lineChartWidget.newDataset();
+        LineDataset dataset = chartWidget.newDataset();
 
         // Construct test data
         dataset.setData(1, 7, 5, 4);
@@ -47,29 +52,15 @@ public final class MockLineChart extends MockVisibleComponent {
         dataset.setLineTension(0);
         dataset.setLabel("Data");
 
-        // Chart widget setup
-        lineChartWidget.getData().setDatasets(dataset);
-        lineChartWidget.getOptions().setMaintainAspectRatio(false);
-        lineChartWidget.getData().setLabels("1", "2", "3", "4");
+        // Set the data set to the chart
+        chartWidget.getData().setDatasets(dataset);
 
-        lineChartWidget.setStylePrimaryName("ode-SimpleMockComponent");
-        initComponent(lineChartWidget);
+        // Set x value labels
+        chartWidget.getData().setLabels("1", "2", "3", "4");
     }
 
     @Override
     public void onPropertyChange(String propertyName, String newValue) {
         super.onPropertyChange(propertyName, newValue);
-
-        // TBD
-    }
-
-    @Override
-    public int getPreferredWidth() {
-        return ComponentConstants.VIDEOPLAYER_PREFERRED_WIDTH;
-    }
-
-    @Override
-    public int getPreferredHeight() {
-        return ComponentConstants.VIDEOPLAYER_PREFERRED_HEIGHT;
     }
 }
