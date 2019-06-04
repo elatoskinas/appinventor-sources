@@ -51,6 +51,7 @@ import com.google.appinventor.client.editor.simple.components.MockVerticalArrang
 import com.google.appinventor.client.editor.simple.components.MockVideoPlayer;
 import com.google.appinventor.client.editor.simple.components.MockWebViewer;
 import com.google.appinventor.client.editor.simple.components.MockLineChart;
+import com.google.appinventor.client.editor.simple.components.MockPieChart;
 import com.google.appinventor.client.editor.simple.components.MockBarChart;
 
 import com.google.appinventor.shared.storage.StorageUtil;
@@ -460,6 +461,8 @@ public final class SimpleComponentDescriptor {
       return new MockFeatureCollection(editor);
     } else if (name.equals(MockLineChart.TYPE)) {
       return new MockLineChart(editor);
+    } else if (name.equals(MockPieChart.TYPE)) {
+      return new MockPieChart(editor);
     } else if (name.equals(MockBarChart.TYPE)) {
       return new MockBarChart(editor);
     } else {
