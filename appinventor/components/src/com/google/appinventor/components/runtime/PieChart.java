@@ -48,12 +48,7 @@ public class PieChart extends ChartBase<com.github.mikephil.charting.charts.PieC
     @SimpleFunction(description = "Adds y value to the Pie Data.")
     public void AddValue(String label, int value) {
         PieEntry entry = new PieEntry(value, label);
-
-        // TBD: Multiple dataset support
-        // For now, this stores all the data in one Data Set.
-        // The reason for this if statement is because passing in a DataSet with
-        // no entries will cause exceptions, so if there are no entries initially,
-        // the ChartData object should have no DataSet attached to it.
+        
         if (data.getDataSetCount() == 0) {
             PieDataSet dataSet = new PieDataSet(new ArrayList<PieEntry>(), "Data");
             dataSet.setColors(ColorTemplate.PASTEL_COLORS);
