@@ -895,6 +895,10 @@ public class YaVersion {
   // - Added SelectionColor Property
   public static final int LISTVIEW_COMPONENT_VERSION = 5;
 
+  // For RECYCLERVIEW_COMPONENT_VERSION 1:
+  // - Initial version.
+  public static final int RECYCLERVIEW_COMPONENT_VERSION = 1;
+
   // For LOCATIONSENSOR_COMPONENT_VERSION 2:
   // - The TimeInterval and DistanceInterval properties were added.
   // For LOCATIONSENSOR_COMPONENT_VERSION 3:
@@ -1248,11 +1252,11 @@ public class YaVersion {
 
   public static final String ACCEPTABLE_COMPANION_PACKAGE = "edu.mit.appinventor.aicompanion3";
 
-  public static final String PREFERRED_COMPANION = "2.52 or 2.52u";
+  public static final String PREFERRED_COMPANION = "2.53 or 2.53u";
   public static final String COMPANION_UPDATE_URL = "";
   public static final String COMPANION_UPDATE_URL1 = "";
   public static final String COMPANION_UPDATE_EMULATOR_URL = "";
-  public static final String [] ACCEPTABLE_COMPANIONS = { "2.52", "2.52u" };
+  public static final String [] ACCEPTABLE_COMPANIONS = { "2.53", "2.53u" };
 
   // Splash Screen Values
   public static final int SPLASH_SURVEY = 1;

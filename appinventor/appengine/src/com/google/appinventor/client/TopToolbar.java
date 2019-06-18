@@ -54,6 +54,7 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -91,6 +92,10 @@ public class TopToolbar extends Composite {
   private static final String WIDGET_NAME_HARDRESET_BUTTON = "HardReset";
   private static final String WIDGET_NAME_PROJECT = "Project";
   private static final String WIDGET_NAME_HELP = "Help";
+  private static final String WIDGET_NAME_DYSLEXIC = "Dyslexic";
+  private static final String WIDGET_NAME_DYSLEXIC_FONT = "dyslexicFont";
+  private static final String WIDGET_NAME_REGULAR = "Regular";
+  private static final String WIDGET_NAME_REGULAR_FONT = "regularFont";
   private static final String WIDGET_NAME_ABOUT = "About";
   private static final String WIDGET_NAME_LIBRARY = "Library";
   private static final String WIDGET_NAME_GETSTARTED = "GetStarted";
@@ -125,6 +130,8 @@ public class TopToolbar extends Composite {
   public DropDownButton buildDropDown;
   public DropDownButton helpDropDown;
   public DropDownButton adminDropDown;
+  public DropDownButton settingsDropDown;
+
 
   private boolean isReadOnly;
   /**
@@ -144,9 +151,9 @@ public class TopToolbar extends Composite {
   public TopToolbar() {
     /*
      * Layout is as follows:
-     * +--------------------------------------------------+
-     * | Project ▾ | Connect ▾ | Build ▾| Help ▾| Admin ▾ |
-     * +--------------------------------------------------+
+     * +---------------------------------------------------------------+
+     * | Project ▾ | Connect ▾ | Build ▾| Help ▾| Admin ▾ | Settings ▾ |
+     * +---------------------------------------------------------------+
      */
     HorizontalPanel toolbar = new HorizontalPanel();
     toolbar.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
@@ -156,6 +163,8 @@ public class TopToolbar extends Composite {
     List<DropDownItem> connectItems = Lists.newArrayList();
     List<DropDownItem> buildItems = Lists.newArrayList();
     List<DropDownItem> helpItems = Lists.newArrayList();
+    List<DropDownItem> settingsItems = Lists.newArrayList();
+
 
     // Should the UI be in read only mode?
     isReadOnly = Ode.getInstance().isReadOnly();
@@ -290,13 +299,19 @@ public class TopToolbar extends Composite {
     }
     helpItems.add(new DropDownItem(WIDGET_NAME_COMPANIONINFO, MESSAGES.companionInformation(),
         new AboutCompanionAction()));
-/* Commented out for now, we do not update the Companion ourselves anymore (except for
-   the emulator). Instead we display a bar-code when necessary or direct people to the
-   companionInformation menu item above */
-/*    helpItems.add(new DropDownItem(WIDGET_NAME_COMPANIONUPDATE, MESSAGES.companionUpdate(),
-      new CompanionUpdateAction())); */
+    helpItems.add(new DropDownItem(WIDGET_NAME_COMPANIONUPDATE, MESSAGES.companionUpdate(),
+        new CompanionUpdateAction()));
     helpItems.add(new DropDownItem(WIDGET_NAME_SHOWSPLASH, MESSAGES.showSplashMenuItem(),
         new ShowSplashAction()));
+
+    //Settings ->{Dyslexic Font, Regular Font}
+   settingsItems.add(new DropDownItem(WIDGET_NAME_DYSLEXIC_FONT, MESSAGES.dyslexicFont(),
+   new changeFontDys()));
+
+   settingsItems.add(new DropDownItem(WIDGET_NAME_REGULAR_FONT, MESSAGES.regularFont(),
+   new changeFontRob()));
+
+
 
     // Create the TopToolbar drop down menus.
     fileDropDown = new DropDownButton(WIDGET_NAME_PROJECT, MESSAGES.projectsTabName(),
@@ -307,20 +322,26 @@ public class TopToolbar extends Composite {
         buildItems, false);
     helpDropDown = new DropDownButton(WIDGET_NAME_HELP, MESSAGES.helpTabName(),
         helpItems, false);
+    settingsDropDown = new DropDownButton(WIDGET_NAME_DYSLEXIC, MESSAGES.dyslexicTabName(),
+        settingsItems, false);
+
 
     // Set the DropDown Styles
     fileDropDown.setStyleName("ode-TopPanelButton");
     connectDropDown.setStyleName("ode-TopPanelButton");
     buildDropDown.setStyleName("ode-TopPanelButton");
     helpDropDown.setStyleName("ode-TopPanelButton");
+    settingsDropDown.setStyleName("ode-TopPanelButton");
 
     // Add the Buttons to the Toolbar.
     toolbar.add(fileDropDown);
     toolbar.add(connectDropDown);
     toolbar.add(buildDropDown);
+    toolbar.add(settingsDropDown); 
 
     // Commented out language switching until we have a clean Chinese translation. (AFM)
     toolbar.add(helpDropDown);
+
 
     //Only if logged in as an admin, add the Admin Button
     if (Ode.getInstance().getUser().getIsAdmin()) {
@@ -344,6 +365,23 @@ public class TopToolbar extends Composite {
   // -----------------------------
   // List of Commands for use in Drop-Down Menus
   // -----------------------------
+
+
+ private static class changeFontDys implements Command {
+    @Override
+    public void execute() {
+      RootPanel.get().addStyleName("gwt-bodyOdf");
+      RootPanel.get().removeStyleName("gwt-bodyRob");     
+    }
+  }
+
+private static class changeFontRob implements Command {
+    @Override
+    public void execute() {
+      RootPanel.get().addStyleName("gwt-bodyRob");
+      RootPanel.get().removeStyleName("gwt-bodyOdf");     
+    }
+  }
 
   private static class NewAction implements Command {
     @Override
@@ -512,9 +550,9 @@ public class TopToolbar extends Composite {
   private static class ExportProjectAction implements Command {
     @Override
     public void execute() {
-      List<Project> selectedProjects =
-          ProjectListBox.getProjectListBox().getProjectList().getSelectedProjects();
       if (Ode.getInstance().getCurrentView() == Ode.PROJECTS) {
+        List<Project> selectedProjects =
+          ProjectListBox.getProjectListBox().getProjectList().getSelectedProjects();
         //If we are in the projects view
         if (selectedProjects.size() == 1) {
           exportProject(selectedProjects.get(0));
@@ -1098,3 +1136,4 @@ public class TopToolbar extends Composite {
   }
 
 }
+
