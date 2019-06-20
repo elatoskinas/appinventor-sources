@@ -614,53 +614,6 @@ public class BlocklyPanel extends HTMLPanel {
     $wnd.BlocklyPanel_getComponentInfo =
         $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getComponentInfo(Ljava/lang/String;));
     $wnd.BlocklyPanel_getComponentsJSONString =
-        $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getComponentsJSONString(Ljava/lang/String;));
-    $wnd.BlocklyPanel_storeBackpack =
-      $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::storeBackpack(Ljava/lang/String;));
-    $wnd.BlocklyPanel_getOdeMessage =
-      $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getOdeMessage(Ljava/lang/String;));
-    $wnd.BlocklyPanel_setGridEnabled =
-      $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::setGridEnabled(Z));
-    $wnd.BlocklyPanel_setSnapEnabled =
-      $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::setSnapEnabled(Z));
-    $wnd.BlocklyPanel_getGridEnabled =
-      $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getGridEnabled());
-    $wnd.BlocklyPanel_getSnapEnabled =
-      $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getSnapEnabled());
-    $wnd.BlocklyPanel_saveUserSettings =
-      $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::saveUserSettings());
-    $wnd.BlocklyPanel_getSharedBackpack =
-      $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getSharedBackpack(Ljava/lang/String;Lcom/google/gwt/core/client/JavaScriptObject;));
-    $wnd.BlocklyPanel_storeSharedBackpack =
-      $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::storeSharedBackpack(Ljava/lang/String;Ljava/lang/String;));
-
-  }-*/;
-
-  private native void initWorkspace(String projectId, boolean readOnly, boolean rtl)/*-{
-    var el = this.@com.google.gwt.user.client.ui.UIObject::getElement()();
-    var workspace = Blockly.BlocklyEditor.create(el,
-      this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::formName,
-      readOnly, rtl);
-    workspace.projectId = projectId;
-    var cb = $entry(this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::workspaceChanged(Lcom/google/gwt/core/client/JavaScriptObject;));
-    cb = cb.bind(this);
-    workspace.addChangeListener(function(e) {
-      var block = this.getBlockById(e.blockId);
-      if ( block && e.name == Blockly.ComponentBlock.COMPONENT_SELECTOR ) {
-        block.rename(e.oldValue, e.newValue);
-      }
-      cb(e);
-      if (workspace.rendered && !e.isTransient) {
-        var handler = this.getWarningHandler();
-        if (handler) {
-          // [lyn 12/31/2013] Check for duplicate component event handlers before
-          // running any error handlers to avoid quadratic time behavior.
-          handler.determineDuplicateComponentEventHandlers();
-          this.requestErrorChecking(block);
-        }
-      }
-    }.bind(workspace));
-    this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::workspace = workspace;
         $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getComponentsJSONString());
     $wnd.BlocklyPanel_getYaVersion =
         $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getYaVersion());
