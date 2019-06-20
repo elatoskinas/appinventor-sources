@@ -557,6 +557,26 @@ public class BlocklyPanel extends HTMLPanel {
       });
   }
 
+  /**
+   *  To get the names of screens for "OpenAnotherScreen block" in control.js
+   *
+   *  @return an array of tuples of screen names
+   */
+  public static String[][] getScreenNames() {
+    String[] names = DesignToolbar.getScreenNames();
+    String[][] screenTuple = new String[names.length][2];
+    //This is required for a dropdown menu, which takes tuples.
+    //The first item is the string displayed
+    //The second item is the actual string passed back when the menu is clicked
+    //It needs quotes because of how the OpenAnotherScreen block functions.
+    for (int i=0;i<names.length;i++) {
+      String nameWithQuotes = "\"" + names[i] + "\"";
+      screenTuple[i][0] = nameWithQuotes;
+      screenTuple[i][1] = nameWithQuotes;
+    }
+    return screenTuple;
+  }
+
   // ------------ Native methods ------------
 
   /**
@@ -641,6 +661,27 @@ public class BlocklyPanel extends HTMLPanel {
       }
     }.bind(workspace));
     this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::workspace = workspace;
+        $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getComponentsJSONString());
+    $wnd.BlocklyPanel_getYaVersion =
+        $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getYaVersion());
+    $wnd.BlocklyPanel_getBlocksLanguageVersion =
+        $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getBlocksLanguageVersion());
+    $wnd.BlocklyPanel_getLocalizedPropertyName =
+        $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getLocalizedPropertyName(Ljava/lang/String;));
+    $wnd.BlocklyPanel_getLocalizedParameterName =
+        $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getLocalizedParameterName(Ljava/lang/String;));
+    $wnd.BlocklyPanel_getLocalizedMethodName =
+        $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getLocalizedMethodName(Ljava/lang/String;));
+    $wnd.BlocklyPanel_getLocalizedEventName =
+        $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getLocalizedEventName(Ljava/lang/String;));
+    $wnd.BlocklyPanel_getLocalizedComponentType =
+        $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getLocalizedComponentType(Ljava/lang/String;));
+    $wnd.BlocklyPanel_getBackpack =
+      $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getBackpack());
+    $wnd.BlocklyPanel_setBackpack =
+      $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::setBackpack(Ljava/lang/String;));
+    $wnd.BlocklyPanel_getScreenNames =
+          $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getScreenNames());
   }-*/;
 
   /**
