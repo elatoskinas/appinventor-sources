@@ -10,6 +10,7 @@ import static com.google.appinventor.client.Ode.MESSAGES;
 import com.google.appinventor.client.editor.simple.components.FormChangeListener;
 import com.google.appinventor.client.editor.simple.components.MockComponent;
 import com.google.appinventor.client.editor.youngandroid.YaFormEditor;
+import com.google.appinventor.client.output.OdeLog;
 import com.google.appinventor.client.widgets.properties.AdditionalChoicePropertyEditor;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.DeferredCommand;
@@ -198,6 +199,8 @@ public final class YoungAndroidComponentSelectorPropertyEditor
       // Check whether our component was renamed.
       String currentValue = property.getValue();
       if (oldName.equals(currentValue)) {
+        OdeLog.log(oldName + " renamed to " + component.getName());
+
         // Our component was renamed.
         property.setValue(newName);
       }
