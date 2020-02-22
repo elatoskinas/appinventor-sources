@@ -26,6 +26,10 @@ import com.google.appinventor.components.common.YaVersion;
 import com.google.appinventor.components.runtime.collect.Lists;
 import com.google.appinventor.components.runtime.collect.Maps;
 import com.google.appinventor.components.runtime.errors.IllegalArgumentError;
+import com.google.appinventor.components.runtime.data.DataEvent;
+import com.google.appinventor.components.runtime.data.DataSourceObserver;
+import com.google.appinventor.components.runtime.data.DataUpdateValueEvent;
+import com.google.appinventor.components.runtime.data.ObservableDataSource;
 import com.google.appinventor.components.runtime.errors.PermissionException;
 import com.google.appinventor.components.runtime.errors.RequestTimeoutException;
 import com.google.appinventor.components.runtime.repackaged.org.json.XML;
@@ -69,6 +73,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -219,7 +224,7 @@ public class Web extends AndroidNonvisibleComponent implements Component, Observ
   private YailList columns = new YailList();
 
   // Set of observers
-  private HashSet<ChartDataBase> dataSourceObservers = new HashSet<ChartDataBase>();
+  private Set<DataSourceObserver> dataSourceObservers = new HashSet<DataSourceObserver>();
 
   /**
    * Creates a new Web component.
@@ -1182,7 +1187,7 @@ public class Web extends AndroidNonvisibleComponent implements Component, Observ
           // TODO: sense that the key and value do not matter for notification,
           // TODO: perhaps it would be worthwhile for the Web component to
           // TODO: have a different interface?
-          notifyDataObservers(null, null);
+          notifyDataObservers(new DataUpdateValueEvent(this, null, null));
         }
 
       } catch (SocketTimeoutException e) {
@@ -1586,21 +1591,20 @@ public class Web extends AndroidNonvisibleComponent implements Component, Observ
   }
 
   @Override
-  public void addDataObserver(ChartDataBase dataComponent) {
-    dataSourceObservers.add(dataComponent);
+  public void addDataObserver(DataSourceObserver observer) {
+    dataSourceObservers.add(observer);
   }
 
   @Override
-  public void removeDataObserver(ChartDataBase dataComponent) {
-    dataSourceObservers.remove(dataComponent);
+  public void removeDataObserver(DataSourceObserver observer) {
+    dataSourceObservers.remove(observer);
   }
 
   @Override
-  public void notifyDataObservers(YailList key, Object newValue) {
-    for (ChartDataBase dataComponent : dataSourceObservers) {
-      // Notify Data Component observer with the new columns value (and null key,
-      // since key does not matter in the case of the Web component)
-      dataComponent.onDataSourceValueChange(this, null, columns);
+  public void notifyDataObservers(DataEvent event) {
+    // Notify each Chart Data observer component of the Data value change
+    for (DataSourceObserver observer : dataSourceObservers) {
+      observer.onDataSourceEvent(event);
     }
   }
 }

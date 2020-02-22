@@ -15,6 +15,10 @@ import com.google.appinventor.components.annotations.*;
 import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.common.PropertyTypeConstants;
 import com.google.appinventor.components.common.YaVersion;
+import com.google.appinventor.components.runtime.data.DataEvent;
+import com.google.appinventor.components.runtime.data.DataSendValueEvent;
+import com.google.appinventor.components.runtime.data.DataSourceObserver;
+import com.google.appinventor.components.runtime.data.ObservableDataSource;
 
 import java.util.HashSet;
 import java.util.List;
@@ -44,7 +48,7 @@ import java.util.Set;
 @SimpleObject
 public class ProximitySensor extends AndroidNonvisibleComponent
         implements OnStopListener, OnResumeListener, SensorComponent, OnPauseListener,
-        SensorEventListener, Deleteable, RealTimeDataSource<String, Float> {
+        SensorEventListener, Deleteable, ObservableDataSource<String, Float> {
 
     private Sensor proximitySensor;
 
@@ -58,7 +62,7 @@ public class ProximitySensor extends AndroidNonvisibleComponent
     private boolean keepRunningWhenOnPause;
 
     // Set of observers
-    private Set<ChartDataBase> dataSourceObservers = new HashSet<ChartDataBase>();
+    private Set<DataSourceObserver> dataSourceObservers = new HashSet<DataSourceObserver>();
 
     /**
      * Creates a new ProximitySensor component.
@@ -223,7 +227,7 @@ public class ProximitySensor extends AndroidNonvisibleComponent
 
         // Notify Data Observers of the changed distance (with null key, since
         // the key does not matter, since only one value is returned)
-        notifyDataObservers("distance", distance);
+        notifyDataObservers(new DataSendValueEvent(this, "distance", distance));
 
         EventDispatcher.dispatchEvent(this, "ProximityChanged", this.distance);
     }
@@ -250,20 +254,20 @@ public class ProximitySensor extends AndroidNonvisibleComponent
     }
 
     @Override
-    public void addDataObserver(ChartDataBase dataComponent) {
-        dataSourceObservers.add(dataComponent);
+    public void addDataObserver(DataSourceObserver observer) {
+        dataSourceObservers.add(observer);
     }
 
     @Override
-    public void removeDataObserver(ChartDataBase dataComponent) {
-        dataSourceObservers.remove(dataComponent);
+    public void removeDataObserver(DataSourceObserver observer) {
+        dataSourceObservers.remove(observer);
     }
 
     @Override
-    public void notifyDataObservers(String key, Object value) {
+    public void notifyDataObservers(DataEvent event) {
         // Notify each Chart Data observer component of the Data value change
-        for (ChartDataBase dataComponent : dataSourceObservers) {
-            dataComponent.onReceiveValue(this, key, value);
+        for (DataSourceObserver observer : dataSourceObservers) {
+            observer.onDataSourceEvent(event);
         }
     }
 

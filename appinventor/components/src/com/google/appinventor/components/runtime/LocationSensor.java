@@ -17,6 +17,10 @@ import com.google.appinventor.components.annotations.UsesPermissions;
 import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.common.PropertyTypeConstants;
 import com.google.appinventor.components.common.YaVersion;
+import com.google.appinventor.components.runtime.data.DataEvent;
+import com.google.appinventor.components.runtime.data.DataSendValueEvent;
+import com.google.appinventor.components.runtime.data.DataSourceObserver;
+import com.google.appinventor.components.runtime.data.ObservableDataSource;
 import com.google.appinventor.components.runtime.util.ErrorMessages;
 
 import android.content.Context;
@@ -80,10 +84,10 @@ import java.util.Set;
                  "android.permission.ACCESS_LOCATION_EXTRA_COMMANDS")
 public class LocationSensor extends AndroidNonvisibleComponent
     implements Component, OnStopListener, OnResumeListener, Deleteable,
-    RealTimeDataSource<String, Float> {
+    ObservableDataSource<String, Float> {
 
   // Set of observers
-  private Set<ChartDataBase> dataSourceObservers = new HashSet<ChartDataBase>();
+  private Set<DataSourceObserver> dataSourceObservers = new HashSet<DataSourceObserver>();
 
   public interface LocationSensorListener extends LocationListener {
     void onTimeIntervalChanged(int time);
@@ -286,10 +290,10 @@ public class LocationSensor extends AndroidNonvisibleComponent
    */
   @SimpleEvent(description = "Indicates that a new location has been detected.")
   public void LocationChanged(double latitude, double longitude, double altitude, float speed) {
-    notifyDataObservers("latitude", latitude);
-    notifyDataObservers("longitude", longitude);
-    notifyDataObservers("altitude", altitude);
-    notifyDataObservers("speed", speed);
+    notifyDataObservers(new DataSendValueEvent(this, "latitude", latitude));
+    notifyDataObservers(new DataSendValueEvent(this, "longitude", longitude));
+    notifyDataObservers(new DataSendValueEvent(this, "altitude", altitude));
+    notifyDataObservers(new DataSendValueEvent(this, "speed", speed));
 
     EventDispatcher.dispatchEvent(this, "LocationChanged", latitude, longitude, altitude, speed);
   }
@@ -796,20 +800,20 @@ public class LocationSensor extends AndroidNonvisibleComponent
   }
 
   @Override
-  public void addDataObserver(ChartDataBase dataComponent) {
-    dataSourceObservers.add(dataComponent);
+  public void addDataObserver(DataSourceObserver observer) {
+    dataSourceObservers.add(observer);
   }
 
   @Override
-  public void removeDataObserver(ChartDataBase dataComponent) {
-    dataSourceObservers.remove(dataComponent);
+  public void removeDataObserver(DataSourceObserver observer) {
+    dataSourceObservers.remove(observer);
   }
 
   @Override
-  public void notifyDataObservers(String key, Object value) {
+  public void notifyDataObservers(DataEvent event) {
     // Notify each Chart Data observer component of the Data value change
-    for (ChartDataBase dataComponent : dataSourceObservers) {
-      dataComponent.onReceiveValue(this, key, value);
+    for (DataSourceObserver observer : dataSourceObservers) {
+      observer.onDataSourceEvent(event);
     }
   }
 

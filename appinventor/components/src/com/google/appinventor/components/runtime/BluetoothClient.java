@@ -15,6 +15,10 @@ import com.google.appinventor.components.annotations.SimpleProperty;
 import com.google.appinventor.components.annotations.UsesPermissions;
 import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.common.YaVersion;
+import com.google.appinventor.components.runtime.data.DataEvent;
+import com.google.appinventor.components.runtime.data.DataSendValueEvent;
+import com.google.appinventor.components.runtime.data.DataSourceObserver;
+import com.google.appinventor.components.runtime.data.ObservableDataSource;
 import com.google.appinventor.components.runtime.util.BluetoothReflection;
 import com.google.appinventor.components.runtime.util.ErrorMessages;
 import com.google.appinventor.components.runtime.util.SdkLevel;
@@ -48,14 +52,14 @@ import java.util.concurrent.TimeUnit;
 @UsesPermissions(permissionNames =
                  "android.permission.BLUETOOTH, " +
                  "android.permission.BLUETOOTH_ADMIN")
-public final class BluetoothClient extends BluetoothConnectionBase implements RealTimeDataSource<String, String> {
+public final class BluetoothClient extends BluetoothConnectionBase implements ObservableDataSource<String, String> {
   private static final String SPP_UUID = "00001101-0000-1000-8000-00805F9B34FB";
 
   private final List<Component> attachedComponents = new ArrayList<Component>();
   private Set<Integer> acceptableDeviceClasses;
 
   // Set of observers
-  private HashSet<ChartDataBase> dataSourceObservers = new HashSet<ChartDataBase>();
+  private Set<DataSourceObserver> dataSourceObservers = new HashSet<DataSourceObserver>();
 
   // Executor Service to poll data continuously from the Input Stream
   // which holds data sent by Bluetooth connections. Used for sending
@@ -344,7 +348,7 @@ public final class BluetoothClient extends BluetoothConnectionBase implements Re
   }
 
   @Override
-  public synchronized void addDataObserver(ChartDataBase dataComponent) {
+  public synchronized void addDataObserver(DataSourceObserver observer) {
     // Data Polling Service has not been initialized yet; Initialize it
     // (since Data Component is added)
     if (dataPollService == null) {
@@ -352,7 +356,7 @@ public final class BluetoothClient extends BluetoothConnectionBase implements Re
     }
 
     // Add the Data Component as an observer
-    dataSourceObservers.add(dataComponent);
+    dataSourceObservers.add(observer);
   }
 
   /**
@@ -378,15 +382,15 @@ public final class BluetoothClient extends BluetoothConnectionBase implements Re
         // Notify data observers of the retrieved value if it is
         // non-empty
         if (!value.equals("")) {
-          notifyDataObservers(null, value);
+          notifyDataObservers(new DataSendValueEvent(BluetoothClient.this, null, value));
         }
       }
     }, 0, pollingRate, TimeUnit.MILLISECONDS);
   }
 
   @Override
-  public synchronized void removeDataObserver(ChartDataBase dataComponent) {
-    dataSourceObservers.remove(dataComponent);
+  public synchronized void removeDataObserver(DataSourceObserver observer) {
+    dataSourceObservers.remove(observer);
 
     // No more Data Source observers exist;
     // Shut down polling service and null it
@@ -400,9 +404,10 @@ public final class BluetoothClient extends BluetoothConnectionBase implements Re
   }
 
   @Override
-  public void notifyDataObservers(String key, Object newValue) {
-    for (ChartDataBase observer : dataSourceObservers) {
-      observer.onReceiveValue(this, key, newValue);
+  public void notifyDataObservers(DataEvent event) {
+    // Notify each Chart Data observer component of the Data value change
+    for (DataSourceObserver observer : dataSourceObservers) {
+      observer.onDataSourceEvent(event);
     }
   }
 

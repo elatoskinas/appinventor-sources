@@ -16,6 +16,10 @@ import com.google.appinventor.components.annotations.SimpleProperty;
 import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.common.PropertyTypeConstants;
 import com.google.appinventor.components.common.YaVersion;
+import com.google.appinventor.components.runtime.data.DataEvent;
+import com.google.appinventor.components.runtime.data.DataSendValueEvent;
+import com.google.appinventor.components.runtime.data.DataSourceObserver;
+import com.google.appinventor.components.runtime.data.ObservableDataSource;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -43,7 +47,7 @@ import java.util.Set;
 @SimpleObject
 public class Pedometer extends AndroidNonvisibleComponent
     implements Component, SensorEventListener, Deleteable,
-    RealTimeDataSource<String, Float> {
+    ObservableDataSource<String, Float> {
   private static final String TAG = "Pedometer";
   private static final String PREFS_NAME = "PedometerPrefs";
 
@@ -75,7 +79,7 @@ public class Pedometer extends AndroidNonvisibleComponent
   private int avgPos = 0;
 
   // Set of observers
-  private Set<ChartDataBase> dataSourceObservers = new HashSet<ChartDataBase>();
+  private Set<DataSourceObserver> dataSourceObservers = new HashSet<DataSourceObserver>();
 
   /** Constructor. */
   public Pedometer(ComponentContainer container) {
@@ -200,8 +204,8 @@ public class Pedometer extends AndroidNonvisibleComponent
   @SimpleEvent(description = "This event is run when a raw step is detected.")
   public void SimpleStep(int simpleSteps, float distance) {
     // Notify Data Observers with changed SimpleSteps and Distance values
-    notifyDataObservers("SimpleSteps", simpleSteps);
-    notifyDataObservers("Distance", distance);
+    notifyDataObservers(new DataSendValueEvent(this, "SimpleSteps", simpleSteps));
+    notifyDataObservers(new DataSendValueEvent(this, "Distance", distance));
 
     EventDispatcher.dispatchEvent(this, "SimpleStep", simpleSteps, distance);
   }
@@ -218,8 +222,8 @@ public class Pedometer extends AndroidNonvisibleComponent
     "A walking step is a step that appears to be involved in forward motion.")
   public void WalkStep(int walkSteps, float distance) {
     // Notify Data Observers with changed WalkSteps and Distance values
-    notifyDataObservers("WalkSteps", walkSteps);
-    notifyDataObservers("Distance", distance);
+    notifyDataObservers(new DataSendValueEvent(this, "WalkSteps", walkSteps));
+    notifyDataObservers(new DataSendValueEvent(this, "Distance", distance));
 
     EventDispatcher.dispatchEvent(this, "WalkStep", walkSteps, distance);
   }
@@ -518,20 +522,20 @@ public class Pedometer extends AndroidNonvisibleComponent
   }
 
   @Override
-  public void addDataObserver(ChartDataBase dataComponent) {
-    dataSourceObservers.add(dataComponent);
+  public void addDataObserver(DataSourceObserver observer) {
+    dataSourceObservers.add(observer);
   }
 
   @Override
-  public void removeDataObserver(ChartDataBase dataComponent) {
-    dataSourceObservers.remove(dataComponent);
+  public void removeDataObserver(DataSourceObserver observer) {
+    dataSourceObservers.remove(observer);
   }
 
   @Override
-  public void notifyDataObservers(String key, Object value) {
+  public void notifyDataObservers(DataEvent event) {
     // Notify each Chart Data observer component of the Data value change
-    for (ChartDataBase dataComponent : dataSourceObservers) {
-      dataComponent.onReceiveValue(this, key, value);
+    for (DataSourceObserver observer : dataSourceObservers) {
+      observer.onDataSourceEvent(event);
     }
   }
 

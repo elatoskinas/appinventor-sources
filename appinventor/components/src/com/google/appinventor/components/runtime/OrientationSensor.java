@@ -15,6 +15,10 @@ import com.google.appinventor.components.annotations.SimpleProperty;
 import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.common.PropertyTypeConstants;
 import com.google.appinventor.components.common.YaVersion;
+import com.google.appinventor.components.runtime.data.DataEvent;
+import com.google.appinventor.components.runtime.data.DataSendValueEvent;
+import com.google.appinventor.components.runtime.data.DataSourceObserver;
+import com.google.appinventor.components.runtime.data.ObservableDataSource;
 import com.google.appinventor.components.runtime.util.FroyoUtil;
 import com.google.appinventor.components.runtime.util.OrientationSensorUtil;
 import com.google.appinventor.components.runtime.util.SdkLevel;
@@ -78,7 +82,7 @@ import java.util.Set;
 @SimpleObject
 public class OrientationSensor extends AndroidNonvisibleComponent
     implements SensorEventListener, Deleteable, OnPauseListener, OnResumeListener,
-    RealTimeDataSource<String, Float> {
+    ObservableDataSource<String, Float> {
   // Constants
   private static final String LOG_TAG = "OrientationSensor";
   // offsets in array returned by SensorManager.getOrientation()
@@ -117,7 +121,7 @@ public class OrientationSensor extends AndroidNonvisibleComponent
   private final float[] values = new float[DIMENSIONS];
 
   // Set of observers
-  private Set<ChartDataBase> dataSourceObservers = new HashSet<ChartDataBase>();
+  private Set<DataSourceObserver> dataSourceObservers = new HashSet<DataSourceObserver>();
 
   /**
    * Creates a new OrientationSensor component.
@@ -180,9 +184,9 @@ public class OrientationSensor extends AndroidNonvisibleComponent
   @SimpleEvent(description = "Called when the orientation has changed.")
   public void OrientationChanged(float azimuth, float pitch, float roll) {
     // Notify the Data Source observers with the updated values
-    notifyDataObservers("azimuth", azimuth);
-    notifyDataObservers("pitch", pitch);
-    notifyDataObservers("roll", roll);
+    notifyDataObservers(new DataSendValueEvent(this, "azimuth", azimuth));
+    notifyDataObservers(new DataSendValueEvent(this, "pitch", pitch));
+    notifyDataObservers(new DataSendValueEvent(this, "roll", roll));
 
     EventDispatcher.dispatchEvent(this, "OrientationChanged", azimuth, pitch, roll);
   }
@@ -465,20 +469,20 @@ public class OrientationSensor extends AndroidNonvisibleComponent
   }
 
   @Override
-  public void addDataObserver(ChartDataBase dataComponent) {
-    dataSourceObservers.add(dataComponent);
+  public void addDataObserver(DataSourceObserver observer) {
+    dataSourceObservers.add(observer);
   }
 
   @Override
-  public void removeDataObserver(ChartDataBase dataComponent) {
-    dataSourceObservers.remove(dataComponent);
+  public void removeDataObserver(DataSourceObserver observer) {
+    dataSourceObservers.remove(observer);
   }
 
   @Override
-  public void notifyDataObservers(String key, Object value) {
+  public void notifyDataObservers(DataEvent event) {
     // Notify each Chart Data observer component of the Data value change
-    for (ChartDataBase dataComponent : dataSourceObservers) {
-      dataComponent.onReceiveValue(this, key, value);
+    for (DataSourceObserver observer : dataSourceObservers) {
+      observer.onDataSourceEvent(event);
     }
   }
 

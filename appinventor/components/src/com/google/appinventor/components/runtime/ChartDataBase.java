@@ -13,6 +13,13 @@ import com.google.appinventor.components.annotations.SimpleObject;
 import com.google.appinventor.components.annotations.SimpleProperty;
 import com.google.appinventor.components.common.ComponentConstants;
 import com.google.appinventor.components.common.PropertyTypeConstants;
+import com.google.appinventor.components.runtime.data.DataEvent;
+import com.google.appinventor.components.runtime.data.DataEventHandler;
+import com.google.appinventor.components.runtime.data.DataSendValueEvent;
+import com.google.appinventor.components.runtime.data.DataSource;
+import com.google.appinventor.components.runtime.data.DataSourceObserver;
+import com.google.appinventor.components.runtime.data.DataUpdateValueEvent;
+import com.google.appinventor.components.runtime.data.ObservableDataSource;
 import com.google.appinventor.components.runtime.util.CsvUtil;
 import com.google.appinventor.components.runtime.util.ErrorMessages;
 import com.google.appinventor.components.runtime.util.YailList;
@@ -34,8 +41,112 @@ import java.util.concurrent.Future;
  * base class was created with future extensions (e.g. 3D data) in mind.
  */
 @SimpleObject
-public abstract class ChartDataBase implements Component, DataSourceChangeListener,
-    DataSourceGetValueListener {
+public abstract class ChartDataBase implements Component, DataSourceObserver {
+  public class ChartDataEventHandler extends DataEventHandler {
+    @Override
+    public void handleEvent(DataEvent event) {
+      super.handleEvent(event);
+    }
+
+    @Override
+    public void handleEvent(DataSendValueEvent event) {
+      // Boolean to indicate whether data should be imported (conditions
+      // for importing are satisfied)
+      boolean importData = false;
+
+      String value = null;
+
+      // BluetoothClient requires different handling due to value format
+      // expected to be with a prefix (prefix||value)
+      if (event.getOrigin() instanceof BluetoothClient) {
+        // Get the imported value as a String
+        value = (String) event.getValue();
+
+        // Check whether the retrieved value starts with the local
+        // dataSourceKey (which indicates the prefix)
+        importData = value.startsWith(dataSourceKey);
+
+        // Data should be imported (prefix match)
+        if (importData) {
+          // Extract the value from the retrieved prefix||value pair
+          // The extraction is done by cutting off the prefix entirely.
+          value = value.substring(dataSourceKey.length());
+        }
+      } else {
+        // Check that the key of the value received matches the
+        // Data Source value key
+        importData = isKeyValid(event.getKey());
+      }
+
+      if (importData) {
+        // Get value as final value to use for the runnable on UI thread
+        final Object finalValue = value;
+
+        // Import value in non-async (since this is a real-time value,
+        // the update will come faster than running in async)
+        // Importing the value asynchronously could cause more
+        // race conditions between data series (as well as added tearing)
+        container.$context().runOnUiThread(new Runnable() {
+          @Override
+          public void run() {
+            // Get the  t value synced across the entire Chart
+            // and update the synced value if necessary
+            t = container.getSyncedTValue(t);
+
+            // Create tuple from current t value and the received value
+            final YailList tuple = YailList.makeList(Arrays.asList(t, finalValue));
+
+            chartDataModel.addTimeEntry(tuple);
+            refreshChart();
+
+            // Increment t value
+            t++;
+          }
+        });
+      }
+    }
+
+    /**
+     * Event called when the value of the observed DataSource component changes.
+     * <p>
+     * If the key matches the dataSourceKey of the Data Component, the specified
+     * new value is processed and imported, while the old data part of the Data
+     * Source is removed.
+     * <p>
+     * A key value of null is interpreted as a change of all the values, so it would
+     * change the imported data.
+     *
+     * @param event  Received update value event.
+     */
+    @Override
+    public void handleEvent(final DataUpdateValueEvent event) {
+      if (isKeyValid(event.getKey())) { // Only process the request if the key value matches
+
+        // Run data operations asynchronously
+        threadRunner.execute(new Runnable() {
+          @Override
+          public void run() {
+            // Old value originating from the Data Source exists and is of type List
+            if (lastDataSourceValue instanceof List) {
+              // Remove the old values
+              chartDataModel.removeValues((List) lastDataSourceValue);
+            }
+
+            updateCurrentDataSourceValue(event.getOrigin(), event.getKey(), event.getValue());
+
+            // New value is a List; Import the value
+            if (lastDataSourceValue instanceof List) {
+              chartDataModel.importFromList((List) lastDataSourceValue);
+            }
+
+            // Refresh the Chart view
+            refreshChart();
+          }
+        });
+      }
+    }
+  }
+
   protected Chart container;
   protected ChartDataModel chartDataModel;
 
@@ -70,13 +181,15 @@ public abstract class ChartDataBase implements Component, DataSourceChangeListen
    */
   protected String dataSourceKey;
 
+  protected ChartDataEventHandler dataEventHandler;
+
   private String label;
   private int color;
   private YailList colors;
   private int pointShape;
   private int lineType;
 
-  private DataSource dataSource; // Attached Chart Data Source
+  private com.google.appinventor.components.runtime.data.DataSource dataSource; // Attached Chart Data Source
 
   /**
    * Last seen observed Data Source value. This has to be
@@ -96,6 +209,7 @@ public abstract class ChartDataBase implements Component, DataSourceChangeListen
    */
   protected ChartDataBase(Chart chartContainer) {
     this.container = chartContainer;
+    this.dataEventHandler = new ChartDataEventHandler();
     chartContainer.addDataComponent(this);
 
     // Set default properties and instantiate Chart Data Model
@@ -446,12 +560,12 @@ public abstract class ChartDataBase implements Component, DataSourceChangeListen
    */
   @SimpleProperty(category = PropertyCategory.BEHAVIOR)
   @DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_CHART_DATA_SOURCE)
-  public void Source(DataSource dataSource) {
+  public void Source(com.google.appinventor.components.runtime.data.DataSource dataSource) {
     // If the previous Data Source is an ObservableDataSource,
     // this Chart Data component must be removed from the observers
     // List of the Data Source.
-    if (this.dataSource != dataSource && this.dataSource instanceof ObservableDataSource) {
-      ((ObservableDataSource) this.dataSource).removeDataObserver(this);
+    if (this.dataSource != dataSource && this.dataSource instanceof com.google.appinventor.components.runtime.data.ObservableDataSource) {
+      ((com.google.appinventor.components.runtime.data.ObservableDataSource) this.dataSource).removeDataObserver(this);
     }
 
     this.dataSource = dataSource;
@@ -460,7 +574,7 @@ public abstract class ChartDataBase implements Component, DataSourceChangeListen
     // is initialized, otherwise exceptions may be caused in case
     // of very small data files.
     if (initialized) {
-      if (dataSource instanceof ObservableDataSource) {
+      if (dataSource instanceof com.google.appinventor.components.runtime.data.ObservableDataSource) {
         // Add this Data Component as an observer to the ObservableDataSource object
         ((ObservableDataSource) dataSource).addDataObserver(this);
 
@@ -895,108 +1009,10 @@ public abstract class ChartDataBase implements Component, DataSourceChangeListen
     }
   }
 
-  /**
-   * Event called when the value of the observed DataSource component changes.
-   * <p>
-   * If the key matches the dataSourceKey of the Data Component, the specified
-   * new value is processed and imported, while the old data part of the Data
-   * Source is removed.
-   * <p>
-   * A key value of null is interpreted as a change of all the values, so it would
-   * change the imported data.
-   *
-   * @param component component that triggered the event
-   * @param key       key of the value that changed
-   * @param newValue  the new value of the observed value
-   */
   @Override
-  public void onDataSourceValueChange(final DataSource component, final String key, final Object newValue) {
-    if (component != dataSource // Calling component is not the attached Data Source. TODO: Un-observe?
-        || (!isKeyValid(key))) { // The changed value is not the observed value
-      return;
-    }
-
-    // Run data operations asynchronously
-    threadRunner.execute(new Runnable() {
-      @Override
-      public void run() {
-        // Old value originating from the Data Source exists and is of type List
-        if (lastDataSourceValue instanceof List) {
-          // Remove the old values
-          chartDataModel.removeValues((List) lastDataSourceValue);
-        }
-
-        updateCurrentDataSourceValue(component, key, newValue);
-
-        // New value is a List; Import the value
-        if (lastDataSourceValue instanceof List) {
-          chartDataModel.importFromList((List) lastDataSourceValue);
-        }
-
-        // Refresh the Chart view
-        refreshChart();
-      }
-    });
-  }
-
-  @Override
-  public void onReceiveValue(RealTimeDataSource component, final String key, Object value) {
-    // Calling component is not the actual Data Source
-    if (component != dataSource) {
-      return;
-    }
-
-    // Boolean to indicate whether data should be imported (conditions
-    // for importing are satisfied)
-    boolean importData = false;
-
-    // BluetoothClient requires different handling due to value format
-    // expected to be with a prefix (prefix||value)
-    if (component instanceof BluetoothClient) {
-      // Get the imported value as a String
-      String valueString = (String) value;
-
-      // Check whether the retrieved value starts with the local
-      // dataSourceKey (which indicates the prefix)
-      importData = valueString.startsWith(dataSourceKey);
-
-      // Data should be imported (prefix match)
-      if (importData) {
-        // Extract the value from the retrieved prefix||value pair
-        // The extraction is done by cutting off the prefix entirely.
-        value = valueString.substring(dataSourceKey.length());
-      }
-    } else {
-      // Check that the key of the value received matches the
-      // Data Source value key
-      importData = isKeyValid(key);
-    }
-
-    if (importData) {
-      // Get value as final value to use for the runnable on UI thread
-      final Object finalValue = value;
-
-      // Import value in non-async (since this is a real-time value,
-      // the update will come faster than running in async)
-      // Importing the value asynchronously could cause more
-      // race conditions between data series (as well as added tearing)
-      container.$context().runOnUiThread(new Runnable() {
-        @Override
-        public void run() {
-          // Get the  t value synced across the entire Chart
-          // and update the synced value if necessary
-          t = container.getSyncedTValue(t);
-
-          // Create tuple from current t value and the received value
-          final YailList tuple = YailList.makeList(Arrays.asList(t, finalValue));
-
-          chartDataModel.addTimeEntry(tuple);
-          refreshChart();
-
-          // Increment t value
-          t++;
-        }
-      });
+  public void onDataSourceEvent(DataEvent event) {
+    if (event.getOrigin() == this.dataSource) {
+      dataEventHandler.handleEvent(event);
     }
   }
 

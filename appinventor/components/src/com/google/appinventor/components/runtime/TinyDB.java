@@ -15,6 +15,10 @@ import com.google.appinventor.components.annotations.SimpleProperty;
 import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.common.PropertyTypeConstants;
 import com.google.appinventor.components.common.YaVersion;
+import com.google.appinventor.components.runtime.data.DataEvent;
+import com.google.appinventor.components.runtime.data.DataSourceObserver;
+import com.google.appinventor.components.runtime.data.DataUpdateValueEvent;
+import com.google.appinventor.components.runtime.data.ObservableDataSource;
 import com.google.appinventor.components.runtime.errors.YailRuntimeError;
 import com.google.appinventor.components.runtime.util.JsonUtil;
 
@@ -23,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -90,7 +95,7 @@ public class TinyDB extends AndroidNonvisibleComponent implements Component, Del
   private Context context;  // this was a local in constructor and final not private
 
   // Set of observers
-  private HashSet<ChartDataBase> dataSourceObservers = new HashSet<ChartDataBase>();
+  private Set<DataSourceObserver> dataSourceObservers = new HashSet<DataSourceObserver>();
 
   // SharedPreferences listener used to notify observers
   private final SharedPreferences.OnSharedPreferenceChangeListener sharedPreferenceChangeListener;
@@ -109,7 +114,7 @@ public class TinyDB extends AndroidNonvisibleComponent implements Component, Del
       @Override
       public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         // Upon value change, notify the observers with the key and the value
-        notifyDataObservers(key, GetValue(key, null));
+        notifyDataObservers(new DataUpdateValueEvent(TinyDB.this, key, GetValue(key, null)));
       }
     };
 
@@ -214,7 +219,7 @@ public class TinyDB extends AndroidNonvisibleComponent implements Component, Del
     final SharedPreferences.Editor sharedPrefsEditor = sharedPreferences.edit();
     sharedPrefsEditor.clear();
     sharedPrefsEditor.commit();
-    notifyDataObservers(null, null); // Notify observers with null value to be interpreted as clear
+    notifyDataObservers(new DataUpdateValueEvent(this, null, null)); // Notify observers with null value to be interpreted as clear
   }
 
   /**
@@ -234,7 +239,7 @@ public class TinyDB extends AndroidNonvisibleComponent implements Component, Del
     final SharedPreferences.Editor sharedPrefsEditor = sharedPreferences.edit();
     sharedPrefsEditor.clear();
     sharedPrefsEditor.commit();
-    notifyDataObservers(null, null); // Notify observers with null value to be interpreted as clear
+    notifyDataObservers(new DataUpdateValueEvent(this, null, null)); // Notify observers with null value to be interpreted as clear
   }
 
   /**
@@ -260,22 +265,20 @@ public class TinyDB extends AndroidNonvisibleComponent implements Component, Del
   }
 
   @Override
-  public void addDataObserver(ChartDataBase dataComponent) {
-    dataSourceObservers.add(dataComponent);
+  public void addDataObserver(DataSourceObserver observer) {
+    dataSourceObservers.add(observer);
   }
 
   @Override
-  public void removeDataObserver(ChartDataBase dataComponent) {
-    dataSourceObservers.remove(dataComponent);
+  public void removeDataObserver(DataSourceObserver observer) {
+    dataSourceObservers.remove(observer);
   }
 
   @Override
-  public void notifyDataObservers(String key, Object newValue) {
-    Log.i("Tag", "Notified: " + dataSourceObservers.size() + " observers.");
-
+  public void notifyDataObservers(DataEvent event) {
     // Notify each Chart Data observer component of the Data value change
-    for (ChartDataBase dataComponent : dataSourceObservers) {
-      dataComponent.onDataSourceValueChange(this, key, newValue);
+    for (DataSourceObserver observer : dataSourceObservers) {
+      observer.onDataSourceEvent(event);
     }
   }
 }

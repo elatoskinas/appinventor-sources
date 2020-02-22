@@ -16,6 +16,10 @@ import com.google.appinventor.components.annotations.SimpleProperty;
 import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.common.PropertyTypeConstants;
 import com.google.appinventor.components.common.YaVersion;
+import com.google.appinventor.components.runtime.data.DataEvent;
+import com.google.appinventor.components.runtime.data.DataSendValueEvent;
+import com.google.appinventor.components.runtime.data.DataSourceObserver;
+import com.google.appinventor.components.runtime.data.ObservableDataSource;
 import com.google.appinventor.components.runtime.util.ErrorMessages;
 
 import android.content.Context;
@@ -94,7 +98,7 @@ import java.util.Set;
 @SimpleObject
 public class AccelerometerSensor extends AndroidNonvisibleComponent
     implements OnPauseListener, OnResumeListener, SensorComponent, SensorEventListener, Deleteable,
-    RealTimeDataSource<String, Float> {
+    ObservableDataSource<String, Float> {
 
   // Logging and Debugging
   private final static String LOG_TAG = "AccelerometerSensor";
@@ -143,7 +147,7 @@ public class AccelerometerSensor extends AndroidNonvisibleComponent
   private final Handler androidUIHandler;
 
   // Set of observers
-  private final Set<ChartDataBase> dataSourceObservers = new HashSet<ChartDataBase>();
+  private Set<DataSourceObserver> dataSourceObservers = new HashSet<DataSourceObserver>();
 
   /**
    * Creates a new AccelerometerSensor component.
@@ -247,9 +251,9 @@ public class AccelerometerSensor extends AndroidNonvisibleComponent
     addToSensorCache(Z_CACHE, zAccel);
 
     // Notify the Data Source observers with the updated values
-    notifyDataObservers("X", xAccel);
-    notifyDataObservers("Y", yAccel);
-    notifyDataObservers("Z", zAccel);
+    notifyDataObservers(new DataSendValueEvent(this, "X", xAccel));
+    notifyDataObservers(new DataSendValueEvent(this, "Y", yAccel));
+    notifyDataObservers(new DataSendValueEvent(this, "Z", zAccel));
 
     long currentTime = System.currentTimeMillis();
 
@@ -512,20 +516,20 @@ public int getDeviceDefaultOrientation() {
   }
 
   @Override
-  public void addDataObserver(ChartDataBase dataComponent) {
-    dataSourceObservers.add(dataComponent);
+  public void addDataObserver(DataSourceObserver observer) {
+    dataSourceObservers.add(observer);
   }
 
   @Override
-  public void removeDataObserver(ChartDataBase dataComponent) {
-    dataSourceObservers.remove(dataComponent);
+  public void removeDataObserver(DataSourceObserver observer) {
+    dataSourceObservers.remove(observer);
   }
 
   @Override
-  public void notifyDataObservers(String key, Object value) {
+  public void notifyDataObservers(DataEvent event) {
     // Notify each Chart Data observer component of the Data value change
-    for (ChartDataBase dataComponent : dataSourceObservers) {
-      dataComponent.onReceiveValue(this, key, value);
+    for (DataSourceObserver observer : dataSourceObservers) {
+      observer.onDataSourceEvent(event);
     }
   }
 

@@ -31,6 +31,11 @@ import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.common.PropertyTypeConstants;
 import com.google.appinventor.components.common.YaVersion;
 
+import com.google.appinventor.components.runtime.data.DataEvent;
+import com.google.appinventor.components.runtime.data.DataSourceObserver;
+import com.google.appinventor.components.runtime.data.DataUpdateValueEvent;
+import com.google.appinventor.components.runtime.data.ObservableDataSource;
+
 import com.google.appinventor.components.runtime.errors.YailRuntimeError;
 
 import com.google.appinventor.components.runtime.util.CloudDBJedisListener;
@@ -248,7 +253,7 @@ public final class CloudDB extends AndroidNonvisibleComponent implements Compone
   private ConnectivityManager cm;
 
   // Set of observers
-  private HashSet<ChartDataBase> dataSourceObservers = new HashSet<ChartDataBase>();
+  private Set<DataSourceObserver> dataSourceObservers = new HashSet<DataSourceObserver>();
 
   private static class storedValue {
     private String tag;
@@ -1036,7 +1041,7 @@ public final class CloudDB extends AndroidNonvisibleComponent implements Compone
             Jedis jedis = getJedis();
             jedis.del(projectID + ":" + tag);
             // Notify all the Data Source observers of the change
-            notifyDataObservers(tag, null);
+            notifyDataObservers(new DataUpdateValueEvent(CloudDB.this, tag, null));
           } catch (Exception e) {
             CloudDBError(e.getMessage());
             flushJedis(true);
@@ -1121,7 +1126,7 @@ public final class CloudDB extends AndroidNonvisibleComponent implements Compone
     final Object finalTagValue = tagValue;
 
     // Notify all the Data Source observers of the change
-    notifyDataObservers(tag, finalTagValue);
+    notifyDataObservers(new DataUpdateValueEvent(this, tag, finalTagValue));
 
     androidUIHandler.post(new Runnable() {
       public void run() {
@@ -1433,20 +1438,20 @@ public final class CloudDB extends AndroidNonvisibleComponent implements Compone
   }
 
   @Override
-  public void addDataObserver(ChartDataBase dataComponent) {
-    dataSourceObservers.add(dataComponent);
+  public void addDataObserver(DataSourceObserver observer) {
+    dataSourceObservers.add(observer);
   }
 
   @Override
-  public void removeDataObserver(ChartDataBase dataComponent) {
-    dataSourceObservers.remove(dataComponent);
+  public void removeDataObserver(DataSourceObserver observer) {
+    dataSourceObservers.remove(observer);
   }
 
   @Override
-  public void notifyDataObservers(String key, Object newValue) {
+  public void notifyDataObservers(DataEvent event) {
     // Notify each Chart Data observer component of the Data value change
-    for (ChartDataBase dataComponent : dataSourceObservers) {
-      dataComponent.onDataSourceValueChange(this, key, newValue);
+    for (DataSourceObserver observer : dataSourceObservers) {
+      observer.onDataSourceEvent(event);
     }
   }
 }
